@@ -1,0 +1,225 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import seaborn as sns # data visualization
+import matplotlib.pyplot as plt # data visualization
+
+# Let's import all the datasets
+test_df = pd.read_csv('/kaggle/input/spaceship-titanic/test.csv') 
+train_df = pd.read_csv('/kaggle/input/spaceship-titanic/train.csv')
+
+**EDA**
+
+Now that we have imported all the data we need to make all exploraty data analysis, we need to identify the type of data and the null values
+
+print([test_df.dtypes, train_df.dtypes]) #this will help us to see the type of data that we have
+print([test_df.describe(), train_df.describe()]) #this will help us to see the statitics for these data
+
+print([train_df.isnull().sum(),test_df.isnull().sum()])
+
+Now that we have checked that we got a lot of missing values we are going column by column to check it and fix it. (First the categorical columns). We are going to star with the objects
+
+print([train_df["HomePlanet"].unique(),train_df["HomePlanet"].unique()])
+print(train_df.groupby("HomePlanet")["HomePlanet"].count())
+print([train_df["CryoSleep"].unique(),train_df["CryoSleep"].unique()])
+print(train_df.groupby("CryoSleep")["CryoSleep"].count())
+print([train_df["Cabin"].unique(),train_df["Cabin"].unique()])
+print(train_df.groupby("Cabin")["Cabin"].count())
+print([train_df["Destination"].unique(),train_df["Destination"].unique()])
+print(train_df.groupby("Destination")["Destination"].count())
+print([train_df["VIP"].unique(),train_df["VIP"].unique()])
+print(train_df.groupby("VIP")["VIP"].count())
+print([train_df["Name"].unique(),train_df["Name"].unique()])
+print(train_df.groupby("Name")["Name"].count())
+print(len(train_df))
+
+Now that we have check all the information from the Object columns I think we can delete Cabin an name
+
+test_df = test_df.drop("Name", axis=1) # we are going to drop the column Name
+test_df = test_df.drop("Cabin", axis=1)# we are going to drop the column Cabin
+train_df = train_df.drop("Name", axis=1)
+train_df = train_df.drop("Cabin", axis=1)
+
+Now lets continue with the columns HomePlanet and Destination
+
+HPtrain = train_df["HomePlanet"].mode()[0] #Here we are extracting the HomePlanet mode
+train_df["HomePlanet"].fillna(HPtrain, inplace=True) #Here we are going to replace the null values for the mode
+HPtest = test_df["HomePlanet"].mode()[0]
+test_df["HomePlanet"].fillna(HPtest, inplace=True)
+
+Dtrain = train_df["Destination"].mode()[0] #Here we are extracting the Destination mode
+train_df["Destination"].fillna(Dtrain, inplace=True) #Here we are going to replace the null values for the mode
+Dtest = test_df["Destination"].mode()[0]
+test_df["Destination"].fillna(Dtest, inplace=True)
+
+print([train_df.isnull().sum(),test_df.isnull().sum()])
+
+Now that we have completed the HP and Destination column,I think the best option to continue is to analyze if the VIP nulls
+
+train_df["total spend"] = train_df["RoomService"] + train_df["FoodCourt"] + train_df["ShoppingMall"] + train_df["Spa"] + train_df["VRDeck"]
+test_df["total spend"] = test_df["RoomService"] + test_df["FoodCourt"] + test_df["ShoppingMall"] + test_df["Spa"] + test_df["VRDeck"]
+
+g = sns.FacetGrid(train_df, col= 'VIP')
+g.map(plt.hist, 'total spend')
+
+We see that the total spend has not a big influency to determinate if the passanger has been VIP or not
+
+g = sns.FacetGrid(train_df, col= 'VIP')
+g.map(plt.hist, 'Age')
+
+The Age has not a big influency to determinate if a passanger has been 
+
+test_age_dict = test_df.groupby(["Age"])["VIP"].median().to_dict()
+print(test_age_dict)
+test_df["VIP"] = test_df["VIP"].fillna(test_df["Age"].map(test_age_dict))
+train_age_dict = train_df.groupby(["Age"])["VIP"].median().to_dict()
+print(test_age_dict)
+train_df["VIP"] = train_df["VIP"].fillna(train_df["Age"].map(test_age_dict))
+
+print([test_df.isnull().sum(),train_df.isnull().sum()])
+
+Lets finish with the last missing values from VIP column
+
+Vtrain = train_df["VIP"].mode()[0] #Here we are extracting the Destination mode
+train_df["VIP"].fillna(Vtrain, inplace=True) #Here we are going to replace the null values for the mode
+Vtest = test_df["VIP"].mode()[0]
+test_df["VIP"].fillna(Vtest, inplace=True)
+
+print([test_df.isnull().sum(),train_df.isnull().sum()])
+
+train_df['VIP'] = train_df['VIP'].astype(bool)
+test_df['VIP'] = test_df['VIP'].astype(bool)
+print([test_df.dtypes, train_df.dtypes])
+
+Now we need to analyze CryoSleep
+
+g = sns.FacetGrid(train_df, col= 'CryoSleep')
+g.map(plt.hist, 'total spend')
+
+g = sns.FacetGrid(train_df, col= 'CryoSleep')
+g.map(plt.hist, 'Age')
+
+test_CryoSleep_dict = test_df.groupby(["Age"])["CryoSleep"].median().to_dict()
+print(test_CryoSleep_dict)
+test_df["CryoSleep"] = test_df["CryoSleep"].fillna(test_df["Age"].map(test_CryoSleep_dict))
+train_CryoSleep_dict = train_df.groupby(["Age"])["CryoSleep"].median().to_dict()
+print(test_age_dict)
+train_df["CryoSleep"] = train_df["CryoSleep"].fillna(train_df["Age"].map(test_CryoSleep_dict))
+
+print([test_df.isnull().sum(),train_df.isnull().sum()])
+
+Vtrain = train_df["CryoSleep"].mode()[0] #Here we are extracting the Destination mode
+train_df["CryoSleep"].fillna(Vtrain, inplace=True) #Here we are going to replace the null values for the mode
+Vtest = test_df["CryoSleep"].mode()[0]
+test_df["CryoSleep"].fillna(Vtest, inplace=True)
+
+print([test_df.isnull().sum(),train_df.isnull().sum()])
+
+Now we need to analyze all the numerical cols, I have read that there is a way to handle missing values and this technique is named Random Sample Imputation, so let's prove it.
+
+df_1 = train_df # First we are going to make a copy from our train data set
+
+def random_sample_imputation(df): # we have generatede a function to handling the missing data but we are assuming that  the data is missing completely at random (MCAR).
+    cols_with_missing_values = df.columns[df.isna().any()].tolist()
+
+    for var in cols_with_missing_values:
+        # extract a random sample
+        random_sample_df = df[var].dropna().sample(df[var].isnull().sum(), random_state=0)
+        
+        # re-index the randomly extracted sample
+        random_sample_df.index = df[df[var].isnull()].index
+        
+        # replace the NA
+        df.loc[df[var].isnull(), var] = random_sample_df
+        
+    return df
+
+df_prueba =  random_sample_imputation(df_1)
+
+print(df_prueba.isnull().sum())
+
+Now that we have checked that the funcion has worked now we are going to use it with our datasets
+
+test_df = random_sample_imputation(test_df)
+train_df = random_sample_imputation(train_df)
+print([test_df.isnull().sum(),train_df.isnull().sum()])
+
+Now we don't have any missing value and we could make some Data visualization
+
+**Data Visualizations**
+But first we need to change the bool Data to int
+
+train_df["VIP"] = train_df["VIP"].astype(int)
+test_df["VIP"] = test_df["VIP"].astype(int)
+train_df["Transported"] = train_df["Transported"].astype(int)
+
+fig, (ax0, ax1) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(7,4))
+
+sns.barplot(data=test_df, x="HomePlanet", y="total spend", ax=ax0)
+sns.barplot(data=test_df, x="Destination", y="total spend", ax=ax1)
+ax0.set(xlabel='Origin')
+ax1.set(xlabel='Destination')
+plt.show()
+
+train_corr = train_df.corr ()
+train_corr.style.background_gradient (cmap = 'coolwarm')
+
+Now we need to change the last object to int64
+
+train_df["PassengerId"] = train_df["PassengerId"].astype(int)
+test_df["PassengerId"] = test_df["PassengerId"].astype(int)
+train_df["CryoSleep"] = train_df["CryoSleep"].astype(int)
+test_df["CryoSleep"] = test_df["CryoSleep"].astype(int)
+
+train_df["HomePlanet"] = train_df["HomePlanet"].map( {'Earth': 1, 'Europa': 2, 'Mars': 3}).astype(int)
+test_df["HomePlanet"] = test_df["HomePlanet"].map( {'Earth': 1, 'Europa': 2, 'Mars': 3}).astype(int)
+train_df["Destination"] = train_df["Destination"].map( {'55 Cancri e': 1, 'PSO J318.5-22': 2, 'TRAPPIST-1e': 3}).astype(int)
+test_df["Destination"] = test_df["Destination"].map( {'55 Cancri e': 1, 'PSO J318.5-22': 2, 'TRAPPIST-1e': 3}).astype(int)
+
+train_df.dtypes
+
+Now we need to check if there is any correlationship between all the features
+
+sns.heatmap(train_df.corr(), cmap='YlGnBu', annot=True, cbar=False, linewidths=0.2)
+CryoSleep, RoomService, SPA, VRDeck are the features that have more correlation with the feature Transpoted, now we need to make our model
+
+**MODELS**
+
+#Import functions to compute accuracy
+from sklearn.metrics import accuracy_score
+
+#Import models, model selection
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import cross_val_score, KFold, train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Set seed for reproducibility
+SEED = 42
+
+X = train_df.drop("Transported", axis=1).values
+y = train_df["Transported"].values
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=SEED)
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+models = {"Logistic Regression": LogisticRegression(), "KNN": KNeighborsClassifier(), "Decision Tree": DecisionTreeClassifier()}
+results = []
+for model in models.values():
+    kf = KFold(n_splits=6, random_state=SEED, shuffle=True)
+    cv_results = cross_val_score(model, X_train_scaled, y_train, cv=kf)
+    results.append(cv_results)
+plt.boxplot(results, labels=models.keys())
+plt.show()
+
+With this graph we could say that the best model is the Logistic Regression, now lets test the performance
+
+for name, model in models.items():
+    model.fit(X_train_scaled, y_train)
+    test_score = model.score(X_test_scaled, y_test)
+    print("{} Test Set Accuracy: {}".format(name, test_score))
